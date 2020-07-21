@@ -46,7 +46,7 @@ if s3d_debug and craftware_debug then print("\nWarning: Both CraftWare Path Labe
 
 -- Firmware Retraction requires a non-zero retract/prime distance set in the GUI in order to produce retraction commands:
 if type(filament_priming_mm) ~= "table" then filament_priming_mm = {} for i = 0, max_number_extruders - 1 do filament_priming_mm[i] = 0 end end -- This is to allow Firmware Retraction check below during IceSL first boot up.
-if firmware_retraction and math.max(unpack(filament_priming_mm)) == 0 then print ("\nWarning: The use of Firmware Retraction requires a non-zero retract value.\nRetraction commands may not be produced.") end
+if firmware_retraction and math.max(filament_priming_mm[0],unpack(filament_priming_mm)) == 0 then print ("\nWarning: The use of Firmware Retraction requires a non-zero retract value.\nRetraction commands may not be produced.") end
 
 -- 'Automatically spiralize' is untested with this profile. Enable with caution. Read the information at: https://groups.google.com/d/msg/icesl/SyA1akzbGjY/QtBB2kFfDwAJ
 if auto_spiralize then print("\nWarning: 'Automatically spiralize' has not been tested extensively with this profile.") end
