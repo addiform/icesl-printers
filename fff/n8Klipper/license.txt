@@ -1,4 +1,7 @@
-RepRapFirmware Configurable Printer Profile (Addiform_RRF) for IceSL
+Klipper Configurable Printer Profile (n8Klipper) for IceSL
+created on 2020-JUL-20 by Nathan Buxton
+
+(based off of Addiform_RRF)
 created on 2020-APR-20 by Nathan Buxton for Addiform (https://addiform.com)
 
 Copyright (c) 2020, X3D Technologies Inc dba Addiform.

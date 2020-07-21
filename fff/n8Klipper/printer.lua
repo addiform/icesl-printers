@@ -1,12 +1,11 @@
--- RepRapFirmware Configurable Printer Profile (Addiform_RRF) for IceSL
--- created on 2020-APR-20 by Nathan Buxton for Addiform (https://addiform.com)
+-- Klipper Configurable Printer Profile (n8Klipper, based off of Addiform_RRF) for IceSL
+-- created on 2020-JUL-20 by Nathan Buxton
 
--- Version 1.0.1
+-- Version 1.0-beta
 
 -- printer.lua
 -- Last modified:
--- Refactoring and bug fixes for 1.0.1. 2020-JUN-08 NaB
--- File created. 2020-APR-20 NaB
+-- File created. 2020-JUL-20 NaB
 
 --     This file is not intended to be modified by the user, unless to implement new features, fix
 --     bugs, or modify behaviour. Refer to features.lua for user-configurable printer parameters.
@@ -39,7 +38,7 @@ end
 
 -- Error checks:
 -- Absolute Extrusion not yet implemented:
-if not relative_extrusion then print("\nWarning: Absolute extrusion is not yet implemented in this profile.\nNo extrusion values will be produced.\nVolumetric Extrusion requires Relative Extrusion to be enabled.") end
+if not relative_extrusion then print("\nWarning: Absolute extrusion is not yet implemented in this profile.\nNo extrusion values will be produced.") end
 
 -- CraftWare Path Labeling and S3D Compatibility conflict:
 if s3d_debug and craftware_debug then print("\nWarning: Both CraftWare Path Labeling and S3D Compatibility are enabled.\nS3D path labels will not be produced.") end
@@ -73,7 +72,7 @@ function get_template(template,options)
     template_string = template_string:gsub("<extruder_swap_retract_speed>",round(extruder_swap_retract_speed_mm_per_sec*60,0))
     template_string = template_string:gsub("<extruder_swap_z_lift>",f(extruder_swap_zlift_mm))
     template_string = template_string:gsub("<current_layer_zheight>",f(current_layer_zheight))
-    template_string = template_string:gsub("<fan_percent>",round(current_fan_speed/100,2))
+    template_string = template_string:gsub("<fan_percent>",round(current_fan_speed*2.55,0))
     template_string = template_string:gsub("<e_movement_speed>",round(e_movement_speed_mm_per_sec*60,0))
     template_string = template_string:gsub("<z_movement_speed>",round(z_movement_speed_mm_per_sec*60,0))
     template_string = template_string:gsub("<travel_speed>",round(travel_speed_mm_per_sec*60,0))
@@ -115,8 +114,8 @@ function get_template(template,options)
             template_string = template_string:gsub("<z>",f(options.z))
         end
 
-        if options.sec then
-            template_string = template_string:gsub("<sec>",round(options.sec,0))
+        if options.msec then
+            template_string = template_string:gsub("<msec>",round(options.msec,0))
         end
     else
         template_string = template_string:gsub("<current_extruder>",current_extruder)
@@ -179,47 +178,20 @@ function layer_start(zheight)
 
         if relative_extrusion then output ("M83") end -- Absolute extrusion is not yet implemented in this profile.
 
-        if volumetric_extrusion and relative_extrusion then
-            local d_string = "D" .. f(filament_diameter_mm[0])
-
-            for i = 1, math.max(extruders[0],unpack(extruders)) do -- extruders[0] needs to be included in math.max() because lua defaults to tables starting at index 1, whereas extruders starts at 0. unpack does not check index 0.
-                d_string = d_string .. ":" .. f(filament_diameter_mm[i])
-            end
-
-            output("M200 " .. d_string)
-        end
-
-        if firmware_retraction and not suppress_m207_start then
-            local p_string = ""
-            local z_string = ""
-            local iterations = 0
-            
-            if enable_z_lift then z_string = " Z" .. f(z_lift_mm) end
-
-            if rrf_3 then iterations = number_of_extruders - 1 end
-
-            for i = 0, iterations do
-                local s_string = " S" .. f(filament_priming_mm[extruders[i]])
-                local f_string = " F" .. round(priming_mm_per_sec[extruders[i]] * 60,0)
-
-                if rrf_3 then p_string = " P" .. extruders[i] end
-
-                output("M207" .. p_string .. s_string .. f_string .. z_string)
+        if insert_start_temp or enable_active_temperature_control then
+            if wait_start_temp or enable_active_temperature_control then
+                set_and_wait_extruder_temperature(current_extruder,_G["extruder_temp_degree_c_" .. current_extruder])
+            else
+                set_extruder_temperature(current_extruder,_G["extruder_temp_degree_c_" .. current_extruder])
             end
         end
 
-        if insert_start_temp then
-            local r_string = " R" .. round(default_standby_temp,1)
-
-            for i = 0, number_of_extruders -1 do
-                if enable_active_temperature_control then r_string = " R" .. round(_G["idle_extruder_temp_degree_c_" .. extruders[i]],1) end
-
-                output("G10 P" .. extruders[i] .. " S" .. round(_G["extruder_temp_degree_c_" .. extruders[i]],1) .. r_string)
+        if insert_start_temp and bed_temp_degree_c ~= 0 then
+            if wait_start_temp then
+                output("M190 S" .. round(bed_temp_degree_c,1))
+            else
+                output("M140 S" .. round(bed_temp_degree_c,1))
             end
-
-            if bed_temp_degree_c ~= 0 then output("M140 S" .. round(bed_temp_degree_c,1)) end
-
-            if wait_start_temp then output("M116") end
         end
 
         if insert_start_gcode then output(get_template("start.g")) end
@@ -275,9 +247,7 @@ function select_extruder(extruder) -- An assumption is made that select_extruder
     if function_debug then comment("select_extruder(" .. extruder .. ")") end
 
     -- GCode output:
-    if suppress_rrf_tool_macros_at_start and not suppress_all_tool_selection_at_start then 
-        output("T" .. extruder .. " P0")
-    elseif not suppress_all_tool_selection_at_start then 
+    if not suppress_all_tool_selection_at_start then 
         output("T" .. extruder)
     end
 
@@ -316,9 +286,7 @@ function retract(extruder,e)
         if firmware_retraction then
             g_string = "G10"
         else
-            if volumetric_extrusion and relative_extrusion then
-                e_string = " E-" .. ff(to_mm_cube(filament_priming_mm[extruder],filament_diameter_mm[extruder]))
-            elseif relative_extrusion then
+            if relative_extrusion then
                 e_string = " E-" .. ff(filament_priming_mm[extruder])
             end
 
@@ -348,9 +316,7 @@ function prime(extruder,e)
         if firmware_retraction then
             g_string = "G11"
         else
-            if volumetric_extrusion and relative_extrusion then
-                e_string = " E" .. ff(to_mm_cube(filament_priming_mm[extruder],filament_diameter_mm[extruder]))
-            elseif  relative_extrusion then
+            if relative_extrusion then
                 e_string = " E" .. ff(filament_priming_mm[extruder])
             end
 
@@ -376,7 +342,7 @@ function move_e(e)
     local filament_to_extrude_this_move = e-already_extruded[current_extruder]
     local move_volume = 0
 
-    if move_debug or volumetric_extrusion and relative_extrusion then move_volume = to_mm_cube(filament_to_extrude_this_move,filament_diameter_mm[current_extruder]) end
+    if move_debug and relative_extrusion then move_volume = to_mm_cube(filament_to_extrude_this_move,filament_diameter_mm[current_extruder]) end
 
     -- Movement Diagnostic output:
     if move_debug then comment("E: " .. fff(filament_to_extrude_this_move) .. " V: " .. fff(move_volume)) end
@@ -385,9 +351,7 @@ function move_e(e)
     local e_string = ""
     local f_string = ""
 
-    if volumetric_extrusion and relative_extrusion then
-        e_string = " E" .. ff(move_volume)
-    elseif relative_extrusion then
+    if relative_extrusion then
         e_string = " E" .. ff(filament_to_extrude_this_move)
     end
 
@@ -411,7 +375,7 @@ function move_xyz(x,y,z)
         local move_length = 0
         local zd_string = ""
 
-        if z ~= previous_z and not firmware_retraction then
+        if z ~= previous_z then
             move_length = math.sqrt((x - previous_x)^2 + (y - previous_y)^2 + (z - previous_z)^2)
             zd_string = " Z: " .. fff(z)
         else 
@@ -425,7 +389,7 @@ function move_xyz(x,y,z)
     local z_string = ""
     local f_string = ""
 
-    if z ~= previous_z and not firmware_retraction then
+    if z ~= previous_z then
         z_string = " Z" .. f(z)
         previous_z = z
     end
@@ -452,7 +416,7 @@ function move_xyze(x,y,z,e)
     local move_length = 0
     local nonplanar_move_thickness = 0
 
-    if s3d_debug or move_debug or volumetric_extrusion and relative_extrusion then move_volume = to_mm_cube(filament_to_extrude_this_move,filament_diameter_mm[current_extruder]) end
+    if s3d_debug or move_debug and relative_extrusion then move_volume = to_mm_cube(filament_to_extrude_this_move,filament_diameter_mm[current_extruder]) end
 
     if s3d_debug or move_debug then
         move_length = math.sqrt((x - previous_x)^2 + (y - previous_y)^2 + (z - previous_z)^2)
@@ -588,9 +552,7 @@ function move_xyze(x,y,z,e)
 
     if z ~= previous_z then z_string = " Z" .. f(z) end
 
-    if volumetric_extrusion and relative_extrusion then
-        e_string = " E" .. ff(move_volume)
-    elseif relative_extrusion then
+    if relative_extrusion then
         e_string = " E" .. ff(filament_to_extrude_this_move)
     end
 
@@ -636,7 +598,7 @@ function set_fan_speed(speed)
         if suppress_fan_at_start and previous_fan_speed == -1 then
             previous_fan_speed = 0
         else
-            output("M106 S" .. round(speed/100,2))
+            output("M106 S" .. round(speed*2.55,0))
         end
     end
 end
@@ -646,19 +608,15 @@ function set_extruder_temperature(extruder,temperature)
     if function_debug then comment("set_extruder_temperature(" .. extruder .. "," .. temperature .. ")") end
 
     -- GCode output:
-    if enable_active_temperature_control and not selecting_tools_at_start then
-        output("G10 P" .. extruder .. " R" .. round(temperature,1))
-    elseif selecting_tools_at_start and function_debug then
-        comment("set_extruder_temperature() skipped due to start tool selection")
-    end
+    output("M104 T" .. extruder .. " S" .. round(temperature,1))
 end    
 
 function set_and_wait_extruder_temperature(extruder,temperature)
     -- Function Diagnostic output:
-    if function_debug then comment("set_and_wait_extruder_temperature(" .. extruder .. "," .. temperature .. ")")end
+    if function_debug then comment("set_and_wait_extruder_temperature(" .. extruder .. "," .. temperature .. ")") end
 
     -- GCode output:
-    if not suppress_temp_control then output("M116 P" .. extruder) end
+    output("M109 T" .. extruder .. " S" .. round(temperature,1))
 end
 
 function wait(sec,x,y,z)
@@ -666,7 +624,7 @@ function wait(sec,x,y,z)
     if function_debug then comment("wait(" .. sec .. "," .. x .. "," .. y .. "," .. z .. ")") end
 
     -- GCode output:
-    output(get_template("wait.g",{sec=sec,x=x,y=y,z=z}))
+    output(get_template("wait.g",{msec=sec*1000,x=x,y=y,z=z}))
 end
 
 function set_mixing_ratios(ratios)

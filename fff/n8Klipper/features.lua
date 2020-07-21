@@ -1,12 +1,11 @@
--- RepRapFirmware Configurable Printer Profile (Addiform_RRF) for IceSL
--- created on 2020-APR-20 by Nathan Buxton for Addiform (https://addiform.com)
+-- Klipper Configurable Printer Profile (n8Klipper, based off of Addiform_RRF) for IceSL
+-- created on 2020-JUL-20 by Nathan Buxton
 
--- Version 1.0.1
+-- Version 1.0-beta
 
 -- features.lua
 -- Last modified:
--- Changes for 1.0.1. 2020-JUN-08 NaB
--- File created. 2020-APR-20 NaB
+-- File created. 2020-JUL-20 NaB
 
 --     This file contains settings to be configured by the user according to their printer.
 --     IceSL gives priority to an assignment of print settings according to the following list:
@@ -19,9 +18,9 @@
 --     6. Graphical User Interface (GUI) -- top priority
 
 
--- ### Addiform_RRF Additional Settings:
+-- ### n8Klipper Additional Settings:
 --
---     These custom settings are for additional features built into Addiform_RRF printer.lua.
+--     These custom settings are for additional features built into n8Klipper printer.lua.
 --     Do not remove them from features.lua unless you intend on modifying printer.lua.
 --     To use these additional features, find them in the GUI Custom Settings tab, or change them
 --     with a custom profile, material, or IceSL Lua script.
@@ -29,7 +28,7 @@
 
 -- > Custom Settings:
 s3d_debug = true
-add_checkbox_setting("s3d_debug","S3D Compatibility","Create S3D-compatibile comments for toolpath visualization,\nas well as path and layer labeling.")
+add_checkbox_setting("s3d_debug","S3D Compatibility","Create S3D-compatible comments for toolpath visualization,\nas well as path and layer labeling.")
 
 craftware_debug = false
 add_checkbox_setting("craftware_debug","CraftWare Path Labeling","Create path labels similar to CraftWare's in place of IceSL\nor S3D style path labels.")
@@ -44,18 +43,8 @@ add_checkbox_setting("function_debug","Function Diagnostic","Enable diagnostic o
 relative_extrusion = true
 add_checkbox_setting("relative_extrusion","Relative Extrusion","Create relative extruder movement commands in GCode output.\n\nIf disabled, no extrusion will be generated, since absolute\nextrusion is not yet implemented in this profile.")
 
-volumetric_extrusion = false
-add_checkbox_setting("volumetric_extrusion","Volumetric Extrusion","Create volumetric extrusion commands using the per-extruder\nfilament diameters configured in IceSL.\n\nRequires Relative Extrusion to be enabled.")
-
-
-rrf_3 = true
-add_checkbox_setting("rrf_3","RRF Version 3.01+","Generate RRF 3.01+ compatible GCode commands.\n\nCurrently this only affects M207 firmware retraction GCode.")
-
 firmware_retraction = false
-add_checkbox_setting("firmware_retraction","Firmware Retraction","Generate firmware retraction G10/G11 commands. Uses retraction\nsettings from GUI to set initial values in M207 command.\n\nNon-zero 'Filament retract' must be set in GUI to produce G10/\nG11 retraction commands!\n\nWhen using RRF Version 3.01 or higher, firmware retraction is\nset on a per-extruder basis. Otherwise, in order to comply\nwith limitations of older RRF versions, only the values from\nthe first-indexed extruder will be used in M207.")
-
-suppress_m207_start = false
-add_checkbox_setting("suppress_m207_start","Suppress M207 at Start","Suppress M207 command at start. This allows the user to set\ntheir own M207 firmware retraction parameters elsewhere.")
+add_checkbox_setting("firmware_retraction","Firmware Retraction","Generate firmware retraction G10/G11 commands.\n\nNon-zero 'Filament retract' must be set in GUI to produce G10/\nG11 retraction commands!")
 
 
 insert_start_gcode = true
@@ -73,9 +62,6 @@ add_checkbox_setting("insert_start_temp","Set Temperatures at Start","Set tool a
 wait_start_temp = true
 add_checkbox_setting("wait_start_temp","Wait for Temperatures at Start","Wait at start for temperatures to be reached.")
 
-suppress_rrf_tool_macros_at_start = true
-add_checkbox_setting("suppress_rrf_tool_macros_at_start","Suppress RRF Tool Macros at Start","Suppress RRF tool change macros at starting tool selection.\n\nSends T* P0.")
-
 suppress_all_tool_selection_at_start = false
 add_checkbox_setting("suppress_all_tool_selection_at_start","Suppress All Tool Selections at Start","Allows for manual tool selection in Start GCode.")
 
@@ -84,17 +70,10 @@ add_checkbox_setting("suppress_fan_at_start","Suppress Fan Command at Start","Al
 
 
 insert_swap_gcode = true
-add_checkbox_setting("insert_swap_gcode","Insert Swap GCode","Insert swap.g into GCode output after tool change commands.\nCommands will be executed after the RRF tool change macros.\n\nSettings from the GUI can be passed to the script to create\ntailored GCode.")
+add_checkbox_setting("insert_swap_gcode","Insert Swap GCode","Insert swap.g into GCode output after tool change commands.\n\nSettings from the GUI can be passed to the script to create\ntailored GCode.")
 
 insert_swappre_gcode = true
-add_checkbox_setting("insert_swappre_gcode","Insert Pre-Swap GCode","Insert swappre.g into GCode output immediately before tools\nare changed. Commands will be executed before the RRF tool\nchange macros.\n\nSettings from the GUI can be passed to the script to create\ntailored GCode.")
-
-
-suppress_temp_control = true
-add_checkbox_setting("suppress_temp_control","Suppress Temp Control at Tool Change","Suppress M116 calls after a tool is selected. This is to give\nfull control to the RRF tool change macros.")
-
-default_standby_temp = 0
-add_setting("default_standby_temp","Default Tool Standby Temperature", 0, 500,"Standby temperature for tools if active temperature control\nis not enabled.")
+add_checkbox_setting("insert_swappre_gcode","Insert Pre-Swap GCode","Insert swappre.g into GCode output immediately before tools\nare changed.\n\nSettings from the GUI can be passed to the script to create\ntailored GCode.")
 
 
 z_movement_speed_mm_per_sec = 7
@@ -135,7 +114,7 @@ bridge_override_speed_mm_per_sec = 0
 add_setting("bridge_override_speed_mm_per_sec","Bridge Speed Override", 0, 500,"Bridge paths will have their print speed set to this value.\n\nSet to 0 to revert to default speed.\n\nunit: mm/sec")
 
 --
--- ### End of Addiform_RRF Additional Settings.
+-- ### End of n8Klipper Additional Settings.
 
 
 -- ### Default IceSL GUI Settings:
@@ -255,7 +234,7 @@ cover_density_crust_mm = 1                  -- Visible if a small icon/button is
 cover_density_max_density = 90              -- Visible if a small icon/button is pressed which is located beside the above button.
 
 
---     An extruder in IceSL is a tool in RRF. In IceSL terms extruder 0 = T0, extruder 1 = T1, etc.
+--     An extruder in IceSL is a tool in Klipper. In IceSL terms extruder 0 = T0, extruder 1 = T1, etc.
 --     Extruders, numbered from 0 to max_number_extruders, can have settings specific to them. A
 --     suffix '_0' after the variable name specifies which extruder the setting applies to. If no
 --     suffix is added, the value for all extruders globally is set.
@@ -340,7 +319,7 @@ extruder_swap_retract_length_mm = 6
 extruder_swap_retract_speed_mm_per_sec = 20
 
 -- > Printer Settings:
---printer = "Addiform_RRF"                  -- The exact directory name of the printer profile. This seems redundant.
+--printer = "n8Klipper"                  -- The exact directory name of the printer profile. This seems redundant.
 bed_size_x_mm = 0                           -- IceSL default is 100. Must be left at 0 if bed origin is at center. If front-left-corner is origin, set to bed size in order to center prints.
 bed_size_y_mm = 0                           -- IceSL default is 100. Must be left at 0 if bed origin is at center. If front-left-corner is origin, set to bed size in order to center prints.
 

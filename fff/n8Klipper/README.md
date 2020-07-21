@@ -1,15 +1,11 @@
-# RepRapFirmware Configurable Printer Profile (Addiform_RRF) for IceSL
-- [x] Created on 2020-APR-20 by Nathan Buxton for [Addiform](https://addiform.com)
-- [x] Bugs fixed and code refactored for v1.0.1 on 2020-JUN-08
+# Klipper Configurable Printer Profile for IceSL (n8Klipper, based off of Addiform_RRF)
+- [x] Created on 2020-JUL-20 by Nathan Buxton
 - [ ] Support for absolute extrusion coming in v1.1
 
-### Addiform_RRF adds the following features:
+### n8Klipper adds the following features:
 - Support for firmware retraction.
-- Support for volumetric extrusion.
 - Support for relative extrusion.
-- Compatibility with RRF tool changes.
-- RRF-specific GCode output.
-- RRF-compatible print info strings: object height, print time, etc.
+- Klipper-specific GCode output.
 - Toolpath visualization compatibility for S3D and CraftWare.
 
 ## IceSL is a state of the art slicer (STL → G-code) with advanced modeling capabilities.
@@ -21,7 +17,7 @@
 - Paint to specify seam locations.
 - Advanced tree-like support structures.
 - Supports based on toolpaths, not only meshes.
-- Paint to specify support locations.
+- Paint to block supports.
 - Hollow prints with self-supporting cavities.
 - Advanced and experimental infill options:
   - Progressive infill patterns that can smoothly vary in density along height.
@@ -40,7 +36,7 @@
 
 ## Using this printer profile:
 
-Addiform_RRF is a template for you to create a profile specific to your printer running RepRapFirmware. You should first make a copy of the `../Addiform_RRF/` directory and rename it for your printer, so that updates to the Addiform_RRF profile template do not overwrite your changes.
+n8Klipper is a template for you to create a profile specific to your printer running ~~RepRapFirmware~~ Klipper. You should first make a copy of the `../n8Klipper/` directory and rename it for your printer, so that updates to the n8Klipper profile template do not overwrite your changes.
 
 ### IceSL printer profiles are made up of several components:
 - `printer.lua` -- functions that produce GCode output
@@ -127,41 +123,35 @@ The file `wait.g` is inserted in order to achieve a minimum layer time when 'Ena
 | `<x>` | Only `swap*.g` and `wait.g` | X coordinate at beginning and end of template |
 | `<y>` | Only `swap*.g` and `wait.g` | Y coordinate at beginning and end of template |
 | `<z>` | Only `swap*.g` and `wait.g` | Z coordinate at beginning and end of template |
-| `<sec>` | Only `wait.g` | number of whole seconds required to wait |
+| `<msec>` | Only `wait.g` | number of milliseconds required to wait |
 
 >**Dev. note: Additional templates and placeholders can be added to `printer.lua` with the `get_template()` function.**
 
 ## Printer Features: `features.lua`
 IceSL provides default values for all of the settings of its built-in features. In `features.lua`, these defaults can be changed.
 
-Addiform_RRF’s `features.lua` template provides a list of all settings/variables that can be set through `features.lua`, the IceSL GUI, Lua scripts, print profiles and/or material presets. This is only for convenience. None of the native IceSL settings need to be in `features.lua`, unless to change the default values for your printer.
+n8Klipper’s `features.lua` template provides a list of all settings/variables that can be set through `features.lua`, the IceSL GUI, Lua scripts, print profiles and/or material presets. This is only for convenience. None of the native IceSL settings need to be in `features.lua`, unless to change the default values for your printer.
 
->***Note: The template `features.lua` also contains additional settings/variables for features added by Addiform_RRF. These variables must all remain initialized in `features.lua`, but can be changed to have different starting values.***
+>***Note: The template `features.lua` also contains additional settings/variables for features added by n8Klipper. These variables must all remain initialized in `features.lua`, but can be changed to have different starting values.***
 
-### The features added to IceSL by the Addiform_RRF printer profile are as follows:
+### The features added to IceSL by the n8Klipper printer profile are as follows:
 | Name | Type | Description |
 | ----: | :----: | --- |
-| S3D Compatibility<br/>`s3d_debug` | `bool` | Create S3D-compatibile comments for toolpath visualization, as well as path and layer labeling. |
-| CraftWare Path Labeling<br/>`craftware_debug` | `bool` | Create path labels similar to CraftWare's in place of IceSL or S3D-compatibile path labels. |
+| S3D Compatibility<br/>`s3d_debug` | `bool` | Create S3D-compatible comments for toolpath visualization, as well as path and layer labeling. |
+| CraftWare Path Labeling<br/>`craftware_debug` | `bool` | Create path labels similar to CraftWare's in place of IceSL or S3D-compatible path labels. |
 | Movement Diagnostic<br/>`move_debug` | `bool` | Enable diagnostic output of movement in GCode comments. |
 | Function Diagnostic<br/>`function_debug` | `bool` | Enable diagnostic output of functions in GCode comments. |
 | Relative Extrusion<br/>`relative_extrusion` | `bool` | Create relative extruder movement commands in GCode output.<br/><br/>If disabled, no extrusion will be generated, since absolute extrusion is not yet implemented in this profile. |
-| Volumetric Extrusion<br/>`volumetric_extrusion` | `bool` | Create volumetric extrusion commands using the per-extruder filament diameters configured in IceSL.<br/><br/>Requires Relative Extrusion to be enabled. |
-| RRF Version 3.01+<br/>`rrf_3` | `bool` | Generate RRF 3.01+ compatible GCode commands.<br/><br/>Currently this only affects `M207` firmware retraction GCode. |
-| Firmware Retraction<br/>`firmware_retraction` | `bool` | Generate firmware retraction `G10`/`G11` commands. Uses retraction settings from GUI to set initial values in `M207` command.<br/><br/>Non-zero 'Filament retract' must be set in GUI to produce `G10`/`G11` retraction commands!<br/><br/>When using RRF Version 3.01 or higher, firmware retraction is set on a per-extruder basis. Otherwise, in order to comply with limitations of older RRF versions, only the values from the first-indexed extruder will be used in `M207`. |
-| Suppress M207 at Start<br/>`suppress_m207_start` | `bool` | Suppress `M207` command at start. This allows the user to set their own `M207` firmware retraction parameters elsewhere. |
+| Firmware Retraction<br/>`firmware_retraction` | `bool` | Generate firmware retraction `G10`/`G11` commands.<br/><br/>Non-zero 'Filament retract' must be set in GUI to produce `G10`/`G11` retraction commands! |
 | Insert Start GCode<br/>`insert_start_gcode` | `bool` | Insert `start.g` into GCode output before the first layer has started.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `start.g` template for variables. |
 | Insert Pre-Start GCode<br/>`insert_startpre_gcode` | `bool` | Insert `startpre.g` into GCode output before temperatures and other options are set.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `startpre.g` template for variables. |
 | Insert End GCode<br/>`insert_end_gcode` | `bool` | Insert `end.g` into GCode output after the print is finished.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `end.g` template for variables. |
 | Set Temperatures at Start<br/>`insert_start_temp` | `bool` | Set tool and bed temperatures at print start. |
 | Wait for Temperatures at Start<br/>`wait_start_temp` | `bool` | Wait at start for temperatures to be reached. |
-| Suppress RRF Tool Macros at Start<br/>`suppress_rrf_tool_macros_at_start` | `bool` | Suppress RRF tool change macros at starting tool selection.<br/><br/>Sends `T* P0`. |
 | Suppress All Tool Selections at Start<br/>`suppress_all_tool_selection_at_start` | `bool` | Allows for manual tool selection in Start GCode. |
 | Suppress Fan Command at Start<br/>`suppress_fan_at_start` | `bool` | Allows for manual insertion of fan commands in Start GCode. |
-| Insert Swap GCode<br/>`insert_swap_gcode` | `bool` | Insert `swap.g` into GCode output after tool change commands. Commands will be executed after the RRF tool change macros.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `swap.g` template for variables. |
-| Insert Pre-Swap GCode<br/>`insert_swappre_gcode` | `bool` | Insert `swappre.g` into GCode output immediately before tools are changed. Commands will be executed before the RRF tool change macros.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `swappre.g` template for variables. |
-| Suppress Temp Control at Tool Change<br/>`suppress_temp_control` | `bool` | Suppress `M116` calls after a tool is selected. This is to give full control to the RRF tool change macros. |
-| Default Tool Standby Temperature<br/>`default_standby_temp` | `float` | Standby temperature for tools if active temperature control is not enabled. |
+| Insert Swap GCode<br/>`insert_swap_gcode` | `bool` | Insert `swap.g` into GCode output after tool change commands.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `swap.g` template for variables. |
+| Insert Pre-Swap GCode<br/>`insert_swappre_gcode` | `bool` | Insert `swappre.g` into GCode output immediately before tools are changed.<br/><br/>Settings from the GUI can be passed to the script to create tailored GCode. See `swappre.g` template for variables. |
 | Z Axis Movement Speed<br/>`z_movement_speed_mm_per_sec` | `float` | Movement speed in mm/sec for all Z axis moves. |
 | Extruder-Only Movement Speed<br/>`e_movement_speed_mm_per_sec` | `float` | Movement speed in mm/sec for all extruder-only moves. |
 | Maximum Shell Speed<br/>`shell_max_speed_mm_per_sec` | `float` | Shell paths will have their print speed reduced to this value.<br/><br/>Set to 0 to revert to default speed.<br/><br/>unit: mm/sec |
