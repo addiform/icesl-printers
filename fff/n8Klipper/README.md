@@ -102,7 +102,7 @@ The file `wait.g` is inserted in order to achieve a minimum layer time when 'Ena
 | `<extruder_swap_retract_speed>` | All templates | tool swap retraction speed, converted to mm/min |
 | `<extruder_swap_z_lift>` | All templates | tool swap Z-lift height |
 | `<current_layer_zheight>` | All templates | absolute Z height of the current layer |
-| `<fan_percent>` | All templates | current fan speed percentage represented as 0.0 to 1.0 |
+| `<fan_percent>` | All templates | current fan speed percentage represented as 0 to 255 |
 | `<e_movement_speed>` | All templates | extruder movement speed from custom settings, converted to mm/min |
 | `<z_movement_speed>` | All templates | Z axis movement speed from custom settings, converted to mm/min |
 | `<travel_speed>` | All templates | travel speed, converted to mm/min |
